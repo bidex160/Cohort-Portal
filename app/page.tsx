@@ -52,10 +52,10 @@ const emptyForm: FormState = {
   name: "",
   organisation: "",
   email: "",
-  phone: "",
+  phone: "+234",
 };
 const organiserEmail = "primeddiagnostics@gmail.com";
-const programmeWhatsApp = "2348052058628";
+const programmeWhatsApp = "+2348052058628";
 
 function nextBriefingSlots() {
   const slots: { start: Date; end: Date; label: string }[] = [];
@@ -137,17 +137,20 @@ export default function Home() {
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("https://api.smartclinicnetwork.com/api/v1/cohort/contact", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          subject: "Chief Medical Director",
-          // cohort: "To be discussed",
-          // wave: "To be discussed",
-          message: "Requested a short hospital opportunity briefing.",
-        }),
-      });
+      const res = await fetch(
+        "https://api.smartclinicnetwork.com/api/v1/cohort/contact",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            ...form,
+            subject: "Chief Medical Director",
+            // cohort: "To be discussed",
+            // wave: "To be discussed",
+            message: "Requested a short hospital opportunity briefing.",
+          }),
+        },
+      );
       const data = await res.json();
       if (!res.ok)
         throw new Error(data.error || "We could not save your response.");
@@ -179,6 +182,21 @@ export default function Home() {
         : data.error || "Upload failed. Please try again.",
     );
   }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+
+    // always ensure it starts with +234
+    if (!val.startsWith("+234")) {
+      val = "+234" + val.replace(/^\+?234?/, ""); // strip any other +234 user typed
+    }
+
+    // only allow numbers after +234
+    const numbersOnly = val.replace(/[^0-9]/g, "");
+    const formatted = "+234" + numbersOnly.slice(3); // keep max after 234
+
+    setForm({ ...form, phone: formatted });
+  };
   return (
     <main>
       <header className="topbar">
@@ -486,9 +504,7 @@ export default function Home() {
                 <input
                   required
                   value={form.name}
-                  onChange={(e) =>
-                    setForm({ ...form, name: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Professor / Dr / Mr / Mrs"
                 />
               </label>
@@ -526,10 +542,9 @@ export default function Home() {
                   <input
                     required
                     value={form.phone}
-                    onChange={(e) =>
-                      setForm({ ...form, phone: e.target.value })
-                    }
-                    placeholder="+234"
+                    onChange={handlePhoneChange}
+                    placeholder="+234 801 234 5678"
+                    inputMode="tel"
                   />
                 </label>
               </div>
