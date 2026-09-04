@@ -1,0 +1,15 @@
+.proof-section{padding:78px max(30px,calc((100vw - 1180px)/2));background:var(--navy);color:#fff;display:grid;grid-template-columns:.7fr 1.3fr;gap:70px;align-items:center}
+.proof-section>div:first-child>span{color:var(--cyan);font-size:12px;letter-spacing:.15em;font-weight:800}
+.proof-section h2{font-size:clamp(34px,4vw,50px);line-height:1.03;letter-spacing:-.04em;margin:16px 0 0}
+.proof-intro{color:#c9bee0;line-height:1.65;margin:18px 0 0;max-width:480px}
+.proof-events{display:grid;gap:10px}
+.proof-events article{display:flex;align-items:center;gap:17px;background:#ffffff0a;border:1px solid #ffffff16;border-radius:15px;padding:16px 18px}
+.proof-events article>b{color:var(--cyan);font-size:13px}
+.proof-events p{display:grid;gap:4px;margin:0}
+.proof-events strong{font-size:16px}
+.proof-events p span{color:#bfb2dc;font-size:13px}
+.proof-events p span b{color:#fff;font-weight:750}.proof-events .cohort-win{background:linear-gradient(135deg,#ffffff12,#27c6db12);border-color:#4ed9ee55;padding:21px 20px}.proof-events .cohort-win strong{color:#8eeafa;font-size:19px}.proof-events .cohort-win p span{line-height:1.7;font-size:13.5px}
+.resources-section{padding:78px max(30px,calc((100vw - 1180px)/2));display:grid;grid-template-columns:.9fr 1.1fr;gap:70px;align-items:center;background:#f8f6fb}.resources-section>div:first-child>span{color:var(--purple);font-size:12px;letter-spacing:.14em;font-weight:800}.resources-section h2{font-size:clamp(32px,4vw,48px);line-height:1.05;letter-spacing:-.04em;margin:14px 0}.resources-section>div:first-child>p{color:var(--muted);line-height:1.65;max-width:520px}.resource-cards{display:grid;gap:12px}.resource-cards a{display:flex;align-items:center;gap:15px;padding:20px;border-radius:17px;background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--ink);box-shadow:0 12px 35px rgba(49,28,83,.07);transition:.2s}.resource-cards a:hover{border-color:var(--purple);transform:translateY(-2px)}.resource-cards a>svg:first-child{color:var(--purple);width:25px;height:25px}.resource-cards a>svg:last-child{margin-left:auto;color:var(--purple);width:19px}.resource-cards span{display:grid;gap:4px}.resource-cards b{font-size:16px}.resource-cards small{color:var(--muted);font-size:13px}
+@media(max-width:800px){.proof-section{grid-template-columns:1fr;gap:28px}}
+@media(max-width:800px){.resources-section{grid-template-columns:1fr;gap:26px}}
+@media(max-width:600px){.proof-section,.resources-section{padding:60px 18px}}
