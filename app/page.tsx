@@ -23,36 +23,237 @@ import {
 } from "lucide-react";
 
 const hospitals = [
+  // Abuja / FCT
   "National Hospital Abuja",
   "Federal Medical Centre Abuja (Jabi)",
   "University of Abuja Teaching Hospital",
-  "Federal Medical Centre Keffi",
-  "Jos University Teaching Hospital",
+  "Nisa Premier Hospital Abuja",
+  "Cedarcrest Hospitals Abuja",
+  "Kelina Hospital Abuja",
+  "Primus International Super Speciality Hospital Abuja",
+  "Alliance Hospital Abuja",
+  "Wuse District Hospital",
+  "Asokoro District Hospital",
+  "Gwarinpa General Hospital",
+  "Maitama District Hospital",
+
+  // Lagos
+  "Lagos University Teaching Hospital",
   "National Orthopaedic Hospital Igbobi",
   "Federal Neuropsychiatric Hospital Yaba",
   "Federal Medical Centre Ebute-Metta",
+  "Lagos State University Teaching Hospital",
+  "General Hospital Lagos",
+  "Gbagada General Hospital",
+  "Lagos Island Maternity Hospital",
+  "Massey Street Children's Hospital",
+  "Reddington Hospital Lagos",
+  "Lagoon Hospitals",
+  "Eko Hospital",
+  "St. Nicholas Hospital Lagos",
+  "Evercare Hospital Lekki",
+  "First Cardiology Consultants Hospital",
+  "Duchess International Hospital",
+  "George's Memorial Medical Centre",
+  "Nigerian Navy Reference Hospital Ojo",
+
+  // Oyo
   "University College Hospital Ibadan",
+  "Federal Medical Centre Oyo",
+  "Adeoyo Maternity Teaching Hospital",
+  "Ring Road State Hospital Ibadan",
+  "Jericho Specialist Hospital Ibadan",
+  "Our Lady of Apostles Catholic Hospital Oluyoro",
+  "Molly Specialist Hospital Ibadan",
+
+  // Osun
   "Obafemi Awolowo University Teaching Hospitals Complex",
-  "University of Port Harcourt Teaching Hospital",
-  "University of Uyo Teaching Hospital",
+  "Wesley Guild Hospital Ilesa",
+  "UNIOSUN Teaching Hospital Osogbo",
+  "State Specialist Hospital Asubiaro Osogbo",
+
+  // Ogun
+  "Federal Medical Centre Abeokuta",
+  "Olabisi Onabanjo University Teaching Hospital",
+  "Neuropsychiatric Hospital Aro Abeokuta",
+  "State Hospital Ijaye Abeokuta",
+  "Babcock University Teaching Hospital",
+
+  // Ondo
+  "Federal Medical Centre Owo",
+  "University of Medical Sciences Teaching Hospital Ondo",
+  "University of Medical Sciences Teaching Hospital Akure",
+
+  // Ekiti
+  "Federal Teaching Hospital Ido-Ekiti",
+  "Ekiti State University Teaching Hospital",
+
+  // Edo
   "University of Benin Teaching Hospital",
+  "Federal Neuropsychiatric Hospital Benin City",
+  "Edo Specialist Hospital",
+  "Central Hospital Benin City",
+  "Irrua Specialist Teaching Hospital",
+
+  // Delta
+  "Federal Medical Centre Asaba",
+  "Delta State University Teaching Hospital Oghara",
+  "Central Hospital Warri",
+  "Central Hospital Agbor",
+
+  // Rivers
+  "University of Port Harcourt Teaching Hospital",
+  "Rivers State University Teaching Hospital",
+  "Military Hospital Port Harcourt",
+  "Braithwaite Memorial Specialist Hospital",
+  "Princess Medical Centre Port Harcourt",
+
+  // Bayelsa
+  "Federal Medical Centre Yenagoa",
+  "Niger Delta University Teaching Hospital Okolobiri",
+
+  // Akwa Ibom
+  "University of Uyo Teaching Hospital",
+  "Ibom Specialist Hospital",
+  "St. Luke's Hospital Anua",
+
+  // Cross River
+  "University of Calabar Teaching Hospital",
+  "Federal Neuropsychiatric Hospital Calabar",
+  "General Hospital Calabar",
+
+  // Abia
+  "Federal Medical Centre Umuahia",
+  "Abia State University Teaching Hospital",
+  "Federal Medical Centre Umuahia",
+
+  // Imo
+  "Federal University Teaching Hospital Owerri",
+  "Imo State University Teaching Hospital Orlu",
+  "Federal Medical Centre Owerri",
+
+  // Anambra
+  "Nnamdi Azikiwe University Teaching Hospital Nnewi",
+  "Chukwuemeka Odumegwu Ojukwu University Teaching Hospital Awka",
+  "St. Charles Borromeo Specialist Hospital Onitsha",
+
+  // Enugu
+  "University of Nigeria Teaching Hospital Enugu",
+  "National Orthopaedic Hospital Enugu",
+  "Federal Neuropsychiatric Hospital Enugu",
+  "Enugu State University Teaching Hospital Parklane",
+  "Mother of Christ Specialist Hospital Enugu",
+
+  // Ebonyi
+  "Alex Ekwueme Federal University Teaching Hospital Abakaliki",
+  "National Obstetric Fistula Centre Abakaliki",
+
+  // Kano
   "Aminu Kano Teaching Hospital",
   "Federal Neuropsychiatric Hospital Kano",
+  "National Orthopaedic Hospital Dala Kano",
+  "Murtala Mohammed Specialist Hospital Kano",
+  "Muhammad Abdullahi Wase Teaching Hospital",
+  "Sir Muhammad Sunusi Specialist Hospital Kano",
+
+  // Kaduna
+  "Ahmadu Bello University Teaching Hospital Zaria",
+  "Federal Neuropsychiatric Hospital Kaduna",
+  "National Ear Care Centre Kaduna",
+  "Barau Dikko Teaching Hospital Kaduna",
+  "44 Nigerian Army Reference Hospital Kaduna",
+  "St. Gerard's Catholic Hospital Kaduna",
+
+  // Katsina
+  "Federal Teaching Hospital Katsina",
+  "General Amadi Rimi Specialist Hospital Katsina",
+
+  // Jigawa
   "Federal Medical Centre Birnin Kudu",
-  "Federal Medical Centre Jalingo",
+  "Rasheed Shekoni Federal University Teaching Hospital Dutse",
+
+  // Kebbi
+  "Federal Medical Centre Birnin Kebbi",
+  "Sir Yahaya Memorial Hospital Birnin Kebbi",
+
+  // Sokoto
+  "Usmanu Danfodiyo University Teaching Hospital Sokoto",
+  "Federal Neuropsychiatric Hospital Kware",
+  "Sokoto Specialist Hospital",
+
+  // Zamfara
+  "Federal Medical Centre Gusau",
+  "Yariman Bakura Specialist Hospital Gusau",
+
+  // Bauchi
   "Abubakar Tafawa Balewa University Teaching Hospital",
+  "Federal Medical Centre Azare",
+  "Specialist Hospital Bauchi",
+
+  // Gombe
+  "Federal Teaching Hospital Gombe",
+  "State Specialist Hospital Gombe",
+
+  // Adamawa
+  "Federal Medical Centre Yola",
+  "Modibbo Adama University Teaching Hospital Yola",
+  "Specialist Hospital Yola",
+
+  // Taraba
+  "Federal Medical Centre Jalingo",
+  "Taraba State Specialist Hospital Jalingo",
+
+  // Borno
+  "University of Maiduguri Teaching Hospital",
+  "Federal Neuropsychiatric Hospital Maiduguri",
+  "State Specialist Hospital Maiduguri",
+
+  // Yobe
+  "Federal Medical Centre Nguru",
+  "Yobe State University Teaching Hospital Damaturu",
+
+  // Plateau
+  "Jos University Teaching Hospital",
+  "Plateau State Specialist Hospital Jos",
+  "Bingham University Teaching Hospital Jos",
+  "Our Lady of Apostles Hospital Jos",
+
+  // Nasarawa
+  "Federal Medical Centre Keffi",
+  "Dalhatu Araf Specialist Hospital Lafia",
+
+  // Benue
+  "Federal University Teaching Hospital Makurdi",
+  "Benue State University Teaching Hospital Makurdi",
+
+  // Niger
+  "Federal Medical Centre Bida",
+  "Ibrahim Badamasi Babangida Specialist Hospital Minna",
+  "General Hospital Minna",
+
+  // Kwara
+  "University of Ilorin Teaching Hospital",
+  "General Hospital Ilorin",
+  "Sobi Specialist Hospital Ilorin",
+
+  // Kogi
+  "Federal Teaching Hospital Lokoja",
+  "Kogi State Specialist Hospital Lokoja",
+  "Prince Abubakar Audu University Teaching Hospital Anyigba",
 ];
 type FormState = {
   name: string;
   organisation: string;
   email: string;
   phone: string;
+  otherOrganisation: string;
 };
 const emptyForm: FormState = {
   name: "",
   organisation: "",
   email: "",
   phone: "+234",
+  otherOrganisation: "",
 };
 const organiserEmail = "primeddiagnostics@gmail.com";
 const programmeWhatsApp = "+2348052058628";
@@ -110,6 +311,8 @@ function whatsappUrl(slot: string, form: FormState, reference: string) {
   return `https://wa.me/${programmeWhatsApp}?text=${encodeURIComponent(message)}`;
 }
 
+const OTHER_HOSPITAL = "__other__";
+
 export default function Home() {
   const [form, setForm] = useState(emptyForm);
   const [stage, setStage] = useState<"intro" | "interest" | "success">("intro");
@@ -136,6 +339,18 @@ export default function Home() {
     e.preventDefault();
     setBusy(true);
     setError("");
+    const organisation =
+      form.organisation === OTHER_HOSPITAL
+        ? form.otherOrganisation.trim()
+        : form.organisation;
+
+    const payload = {
+      ...form,
+      organisation,
+    };
+
+    // Remove this if your backend actually expects otherOrganisation
+    delete (payload as any).otherOrganisation;
     try {
       const res = await fetch(
         "https://api.smartclinicnetwork.com/api/v1/cohort/contact",
@@ -143,7 +358,7 @@ export default function Home() {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            ...form,
+            ...payload,
             subject: "Chief Medical Director",
             // cohort: "To be discussed",
             // wave: "To be discussed",
@@ -510,19 +725,52 @@ export default function Home() {
               </label>
               <label>
                 Hospital
-                <select
-                  required
-                  value={form.organisation}
-                  onChange={(e) =>
-                    setForm({ ...form, organisation: e.target.value })
-                  }
-                >
-                  <option value="">Select hospital</option>
-                  {hospitals.map((h) => (
-                    <option key={h}>{h}</option>
-                  ))}
-                  <option>My hospital is not listed</option>
-                </select>
+                <div>
+                  <select
+                    required
+                    value={form.organisation}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      setForm({
+                        ...form,
+                        organisation: value,
+                        otherOrganisation:
+                          value === OTHER_HOSPITAL
+                            ? form.otherOrganisation
+                            : "",
+                      });
+                    }}
+                  >
+                    <option value="">Select hospital</option>
+
+                    {hospitals.map((hospital) => (
+                      <option key={hospital} value={hospital}>
+                        {hospital}
+                      </option>
+                    ))}
+
+                    <option value={OTHER_HOSPITAL}>
+                      My hospital is not listed
+                    </option>
+                  </select>
+
+                  {form.organisation === OTHER_HOSPITAL && (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter hospital name"
+                      className="mt-2"
+                      value={form.otherOrganisation}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          otherOrganisation: e.target.value,
+                        })
+                      }
+                    />
+                  )}
+                </div>
               </label>
               <div className="form-grid">
                 <label>
