@@ -256,56 +256,137 @@ const emptyForm: FormState = {
 const organiserEmail = "primeddiagnostics@gmail.com";
 const programmeWhatsApp = "+2348052058628";
 
-function nextBriefingSlots() {
-  const slots: { start: Date; end: Date; label: string }[] = [];
-  const day = new Date();
-  day.setUTCDate(day.getUTCDate() + 1);
-  day.setUTCHours(0, 0, 0, 0);
-  while (slots.length < 4) {
-    const weekday = day.getUTCDay();
-    if (weekday !== 0 && weekday !== 6) {
-      for (const utcHour of [9, 13]) {
-        if (slots.length === 4) break;
-        const start = new Date(day);
-        start.setUTCHours(utcHour);
-        const end = new Date(start.getTime() + 15 * 60 * 1000);
-        slots.push({
-          start,
-          end,
-          label:
-            start.toLocaleString("en-NG", {
+type BriefingSlot = {
+  start: Date;
+  end: Date;
+  label: string;
+};
+
+function toDateInputValue(date: Date) {
+  return date.toLocaleDateString("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
+function createBriefingSlotsForDate(dateValue: string): BriefingSlot[] {
+  // Explicit +01:00 offset keeps these times in West Africa Time.
+  return [9, 13].map((hour) => {
+    const hourString = String(hour).padStart(2, "0");
+    const start = new Date(`${dateValue}T${hourString}:00:00+01:00`);
+    const end = new Date(start.getTime() + 15 * 60 * 1000);
+
+    return {
+      start,
+      end,
+      label:
+        start.toLocaleString("en-NG", {
+          timeZone: "Africa/Lagos",
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }) + " WAT",
+    };
+  });
+}
+
+function nextFourBriefingDays(): BriefingSlot[] {
+  const slots: BriefingSlot[] = [];
+  const cursor = new Date();
+
+  // Start from tomorrow.
+  cursor.setDate(cursor.getDate() + 1);
+
+  let workingDays = 0;
+
+  while (workingDays < 4) {
+    const dateValue = toDateInputValue(cursor);
+
+    // Check weekday in Lagos by using midday WAT for the selected calendar date.
+    const dateAtNoon = new Date(`${dateValue}T12:00:00+01:00`);
+    const weekday = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Africa/Lagos",
+        weekday: "short",
+      })
+        .formatToParts(dateAtNoon)
+        .find((part) => part.type === "weekday")?.value === "Sun"
+        ? 0
+        : new Intl.DateTimeFormat("en-US", {
               timeZone: "Africa/Lagos",
               weekday: "short",
-              day: "numeric",
-              month: "short",
-              hour: "numeric",
-              minute: "2-digit",
-            }) + " WAT",
-        });
-      }
+            }).format(dateAtNoon) === "Sat"
+          ? 6
+          : 1,
+    );
+
+    if (weekday !== 0 && weekday !== 6) {
+      slots.push(...createBriefingSlotsForDate(dateValue));
+      workingDays++;
     }
-    day.setUTCDate(day.getUTCDate() + 1);
+
+    cursor.setDate(cursor.getDate() + 1);
   }
+
   return slots;
 }
+
+function briefingSlotsForDate(dateValue: string): BriefingSlot[] {
+  if (!dateValue) return nextFourBriefingDays();
+
+  const selectedDate = new Date(`${dateValue}T12:00:00+01:00`);
+  const weekdayName = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Lagos",
+    weekday: "short",
+  }).format(selectedDate);
+
+  // No briefing slots on weekends.
+  if (weekdayName === "Sat" || weekdayName === "Sun") {
+    return [];
+  }
+
+  return createBriefingSlotsForDate(dateValue).filter(
+    (slot) => slot.start.getTime() > Date.now(),
+  );
+}
+
+function resolvedOrganisation(form: FormState) {
+  return form.organisation === OTHER_HOSPITAL
+    ? form.otherOrganisation.trim()
+    : form.organisation;
+}
+
 function googleCalendarUrl(start: Date, end: Date, form: FormState) {
   const stamp = (d: Date) =>
     d
       .toISOString()
       .replace(/[-:]/g, "")
       .replace(/\.\d{3}/, "");
+
+  const organisation = resolvedOrganisation(form);
+
   const params = new URLSearchParams({
     action: "TEMPLATE",
-    text: `THIE opportunity briefing — ${form.organisation}`,
+    text: `THIE opportunity briefing — ${organisation}`,
     dates: `${stamp(start)}/${stamp(end)}`,
     ctz: "Africa/Lagos",
-    details: `A focused 15-minute briefing for ${form.name} on how ${form.organisation} can gain patient reach, specialist access and new revenue channels through the Smart Clinic Exchange.\n\nCMD email: ${form.email}\nCMD phone: ${form.phone}`,
+    details: `A focused 15-minute briefing for ${form.name} on how ${organisation} can gain patient reach, specialist access and new revenue channels through the Smart Clinic Exchange.\n\nCMD email: ${form.email}\nCMD phone: ${form.phone}`,
     add: organiserEmail,
   });
+
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
+
 function whatsappUrl(slot: string, form: FormState, reference: string) {
-  const message = `Hello, I have selected a THIE briefing time.\n\nName: ${form.name}\nHospital: ${form.organisation}\nEmail: ${form.email}\nPhone: ${form.phone}\nPreferred time: ${slot}\nReference: ${reference}\n\nPlease confirm the meeting and send the joining link.`;
+  const organisation = resolvedOrganisation(form);
+
+  const message = `Hello, I have selected a THIE briefing time.\n\nName: ${form.name}\nHospital: ${organisation}\nEmail: ${form.email}\nPhone: ${form.phone}\nPreferred time: ${slot}\nReference: ${reference}\n\nPlease confirm the meeting and send the joining link.`;
+
   return `https://wa.me/${programmeWhatsApp}?text=${encodeURIComponent(message)}`;
 }
 
@@ -314,14 +395,49 @@ const OTHER_HOSPITAL = "__other__";
 export default function Home() {
   const [form, setForm] = useState(emptyForm);
   const [stage, setStage] = useState<"intro" | "interest" | "success">("intro");
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [selectedBriefingDate, setSelectedBriefingDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [submissionId, setSubmissionId] = useState("");
   const [mouStatus, setMouStatus] = useState("");
   const interestRef = useRef<HTMLDivElement>(null);
-  const briefingSlots = stage === "success" ? nextBriefingSlots() : [];
-  const chosenSlot = selectedSlot === null ? null : briefingSlots[selectedSlot];
+
+  const briefingSlots =
+    stage === "success"
+      ? selectedBriefingDate
+        ? briefingSlotsForDate(selectedBriefingDate)
+        : nextFourBriefingDays()
+      : [];
+
+  const chosenSlot =
+    briefingSlots.find(
+      (slot) => slot.start.toISOString() === selectedSlot,
+    ) ?? null;
+
+  const [hospitalSearch, setHospitalSearch] = useState("");
+  const [showHospitals, setShowHospitals] = useState(false);
+
+  const filteredHospitals = hospitals
+    .filter((hospital) =>
+      hospital.toLowerCase().includes(hospitalSearch.toLowerCase()),
+    )
+    .sort();
+
+  const todayInputValue = toDateInputValue(new Date());
+
+  const selectedBriefingDateLabel = selectedBriefingDate
+    ? new Date(`${selectedBriefingDate}T12:00:00+01:00`).toLocaleDateString(
+        "en-NG",
+        {
+          timeZone: "Africa/Lagos",
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        },
+      )
+    : "";
   const begin = () => {
     setStage("interest");
     setTimeout(
@@ -446,7 +562,7 @@ export default function Home() {
                 <em>Multiple hospitals.</em>
               </h1>
               <p className="lead">
-                Join the network without giving up control. Your patients can
+                Join the tertiary hospital network powered by committe of chief medical directors, without giving up control. Your patients can
                 carry their identity, access approved records, find specialist
                 care and pay across connected hospitals—while your hospital
                 gains reach, referrals and new revenue channels.
@@ -732,55 +848,95 @@ export default function Home() {
                   placeholder="Professor / Dr / Mr / Mrs"
                 />
               </label>
-              <label>
-                Hospital
-                <div>
-                  <select
-                    required
-                    value={form.organisation}
-                    onChange={(e) => {
-                      const value = e.target.value;
+<label>
+  Hospital
 
-                      setForm({
-                        ...form,
-                        organisation: value,
-                        otherOrganisation:
-                          value === OTHER_HOSPITAL
-                            ? form.otherOrganisation
-                            : "",
-                      });
-                    }}
-                  >
-                    <option value="">Select hospital</option>
+  <div className="relative">
+    <input
+      type="text"
+      required
+      placeholder="Search hospital..."
+      value={
+        showHospitals
+          ? hospitalSearch
+          : form.organisation === OTHER_HOSPITAL
+            ? "My hospital is not listed"
+            : form.organisation
+      }
+      onFocus={() => {
+        setHospitalSearch("");
+        setShowHospitals(true);
+      }}
+      onChange={(e) => {
+        setHospitalSearch(e.target.value);
+        setShowHospitals(true);
+      }}
+      className="w-full"
+    />
 
-                    {hospitals.sort().map((hospital) => (
-                      <option key={hospital} value={hospital}>
-                        {hospital}
-                      </option>
-                    ))}
+    {showHospitals && (
+      <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border bg-white shadow-lg">
+        {filteredHospitals.length > 0 ? (
+          filteredHospitals.map((hospital) => (
+            <button
+              key={hospital}
+              type="button"
+              className="block w-full px-3 py-2 text-left hover:bg-gray-100"
+              onClick={() => {
+                setForm({
+                  ...form,
+                  organisation: hospital,
+                  otherOrganisation: "",
+                });
 
-                    <option value={OTHER_HOSPITAL}>
-                      My hospital is not listed
-                    </option>
-                  </select>
+                setHospitalSearch(hospital);
+                setShowHospitals(false);
+              }}
+            >
+              {hospital}
+            </button>
+          ))
+        ) : (
+          <div className="px-3 py-2 text-sm text-gray-500">
+            No hospitals found
+          </div>
+        )}
 
-                  {form.organisation === OTHER_HOSPITAL && (
-                    <input
-                      type="text"
-                      required
-                      placeholder="Enter hospital name"
-                      className="mt-2"
-                      value={form.otherOrganisation}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          otherOrganisation: e.target.value,
-                        })
-                      }
-                    />
-                  )}
-                </div>
-              </label>
+        <button
+          type="button"
+          className="block w-full border-t px-3 py-2 text-left font-medium hover:bg-gray-100"
+          onClick={() => {
+            setForm({
+              ...form,
+              organisation: OTHER_HOSPITAL,
+            });
+
+            setHospitalSearch("");
+            setShowHospitals(false);
+          }}
+        >
+          My hospital is not listed
+        </button>
+      </div>
+    )}
+
+    {form.organisation === OTHER_HOSPITAL && (
+      <input
+        type="text"
+        required
+        placeholder="Enter hospital name"
+        className="mt-2 w-full"
+        value={form.otherOrganisation}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            otherOrganisation: e.target.value,
+          })
+        }
+      />
+    )}
+  </div>
+</label>
               <div className="form-grid">
                 <label>
                   Official email
@@ -835,25 +991,129 @@ export default function Home() {
               </div>
               <Clock />
             </div>
-            <div className="slot-grid">
-              {briefingSlots.map((slot, index) => (
+
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                alignItems: "flex-end",
+                flexWrap: "wrap",
+                margin: "18px 0 12px",
+              }}
+            >
+              <label
+                style={{
+                  flex: "1 1 240px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "7px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  marginBottom: 0
+                }}
+              >
+                Need another day?
+                <input
+                  type="date"
+                  min={todayInputValue}
+                  value={selectedBriefingDate}
+                  onChange={(e) => {
+                    setSelectedBriefingDate(e.target.value);
+                    setSelectedSlot(null);
+                  }}
+                  style={{
+                    width: "100%",
+                    minHeight: "46px",
+                    boxSizing: "border-box",
+                    border: "1px solid #ddd4e8",
+                    borderRadius: "10px",
+                    padding: "10px 12px",
+                    background: "#fff",
+                    font: "inherit",
+                  }}
+                />
+              </label>
+
+              {selectedBriefingDate && (
                 <button
                   type="button"
-                  className={selectedSlot === index ? "selected" : ""}
-                  key={slot.start.toISOString()}
-                  onClick={() => setSelectedSlot(index)}
+                  onClick={() => {
+                    setSelectedBriefingDate("");
+                    setSelectedSlot(null);
+                  }}
+                  style={{
+                    minHeight: "46px",
+                    padding: "0 16px",
+                    borderRadius: "10px",
+                    border: "1px solid #52258b",
+                    background: "#fff",
+                    color: "#52258b",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "7px",
+                  }}
                 >
-                  <CalendarClock />
-                  <span>
-                    <b>{slot.label}</b>
-                    <small>
-                      {selectedSlot === index ? "Selected" : "Select this time"}
-                    </small>
-                  </span>
-                  {selectedSlot === index ? <Check /> : <ArrowRight />}
+                  <CalendarClock size={17} />
+                  Show next 4 days
                 </button>
-              ))}
+              )}
             </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "14px",
+                padding: "10px 12px",
+                borderRadius: "9px",
+                background: "#f4f0f9",
+                color: "#655c73",
+                fontSize: "13px",
+              }}
+            >
+              <CalendarClock size={17} />
+              <span>
+                {selectedBriefingDate
+                  ? `Showing availability for ${selectedBriefingDateLabel}`
+                  : "Showing the next 4 available working days"}
+              </span>
+            </div>
+
+            {briefingSlots.length > 0 ? (
+              <div className="slot-grid">
+                {briefingSlots.map((slot) => {
+                  const slotId = slot.start.toISOString();
+                  const isSelected = selectedSlot === slotId;
+
+                  return (
+                    <button
+                      type="button"
+                      className={isSelected ? "selected" : ""}
+                      key={slotId}
+                      onClick={() => setSelectedSlot(slotId)}
+                    >
+                      <CalendarClock />
+                      <span>
+                        <b>{slot.label}</b>
+                        <small>
+                          {isSelected ? "Selected" : "Select this time"}
+                        </small>
+                      </span>
+                      {isSelected ? <Check /> : <ArrowRight />}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="choose-prompt">
+                No briefing times are available on this date. Please select
+                another weekday.
+              </div>
+            )}
+
             {chosenSlot ? (
               <div className="booking-actions">
                 <a
@@ -863,6 +1123,8 @@ export default function Home() {
                     chosenSlot.end,
                     form,
                   )}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <CalendarClock />
                   <span>
@@ -870,9 +1132,12 @@ export default function Home() {
                     <small>Invitation and reminders</small>
                   </span>
                 </a>
+
                 <a
                   className="whatsapp-action"
                   href={whatsappUrl(chosenSlot.label, form, submissionId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <MessageCircle />
                   <span>
@@ -886,17 +1151,19 @@ export default function Home() {
                 Select a time above to continue.
               </div>
             )}
+
             <div className="calendar-note">
               <Mail />
               <p>
                 <b>Two reliable ways to confirm</b>
                 <span>
                   Calendar prepares the invitation in the same window. WhatsApp
-                  sends your selected time, hospital and contact details
-                  directly to the programme team for confirmation.
+                  sends your selected time, hospital and contact details directly
+                  to the programme team for confirmation.
                 </span>
               </p>
             </div>
+
             <details>
               <summary>Already have an MOU to share?</summary>
               <label className="upload">
@@ -922,6 +1189,7 @@ export default function Home() {
             onClick={() => {
               setStage("intro");
               setSelectedSlot(null);
+              setSelectedBriefingDate("");
               setForm(emptyForm);
             }}
           >
