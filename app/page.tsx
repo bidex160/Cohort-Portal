@@ -15,11 +15,9 @@ import {
   HeartHandshake,
   Mail,
   MessageCircle,
-  ShieldCheck,
   Stethoscope,
   TrendingUp,
   Upload,
-  WalletCards,
 } from "lucide-react";
 
 const hospitals = [
@@ -696,6 +694,17 @@ export default function Home() {
                 </span>
                 <Download />
               </a>
+              <a
+                href="/resources/Smart_Clinic_CMD_Regional_Hub_3_Page_Summary-1.pdf"
+                download
+              >
+                <FileHeart />
+                <span>
+                  <b>Summary</b>
+                  <small>Explore hospital journey summary</small>
+                </span>
+                <Download />
+              </a>
             </div>
           </section>
           <section ref={interestRef} id="interest" className="interest-section">
@@ -744,7 +753,7 @@ export default function Home() {
                   >
                     <option value="">Select hospital</option>
 
-                    {hospitals.map((hospital) => (
+                    {hospitals.sort().map((hospital) => (
                       <option key={hospital} value={hospital}>
                         {hospital}
                       </option>
