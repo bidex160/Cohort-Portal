@@ -121,7 +121,6 @@ const hospitals = [
   "General Hospital Calabar",
 
   // Abia
-  "Federal Medical Centre Umuahia",
   "Abia State University Teaching Hospital",
   "Federal Medical Centre Umuahia",
 
@@ -271,8 +270,26 @@ function toDateInputValue(date: Date) {
   });
 }
 
+function toDateTimeLocalValue(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  const get = (type: string) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get(
+    "minute",
+  )}`;
+}
+
 function createBriefingSlotsForDate(dateValue: string): BriefingSlot[] {
-  // Explicit +01:00 offset keeps these times in West Africa Time.
   return [9, 13].map((hour) => {
     const hourString = String(hour).padStart(2, "0");
     const start = new Date(`${dateValue}T${hourString}:00:00+01:00`);
@@ -298,34 +315,20 @@ function createBriefingSlotsForDate(dateValue: string): BriefingSlot[] {
 function nextFourBriefingDays(): BriefingSlot[] {
   const slots: BriefingSlot[] = [];
   const cursor = new Date();
-
-  // Start from tomorrow.
   cursor.setDate(cursor.getDate() + 1);
 
   let workingDays = 0;
 
   while (workingDays < 4) {
     const dateValue = toDateInputValue(cursor);
-
-    // Check weekday in Lagos by using midday WAT for the selected calendar date.
     const dateAtNoon = new Date(`${dateValue}T12:00:00+01:00`);
-    const weekday = Number(
-      new Intl.DateTimeFormat("en-US", {
-        timeZone: "Africa/Lagos",
-        weekday: "short",
-      })
-        .formatToParts(dateAtNoon)
-        .find((part) => part.type === "weekday")?.value === "Sun"
-        ? 0
-        : new Intl.DateTimeFormat("en-US", {
-              timeZone: "Africa/Lagos",
-              weekday: "short",
-            }).format(dateAtNoon) === "Sat"
-          ? 6
-          : 1,
-    );
 
-    if (weekday !== 0 && weekday !== 6) {
+    const weekday = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Africa/Lagos",
+      weekday: "short",
+    }).format(dateAtNoon);
+
+    if (weekday !== "Sat" && weekday !== "Sun") {
       slots.push(...createBriefingSlotsForDate(dateValue));
       workingDays++;
     }
@@ -336,23 +339,48 @@ function nextFourBriefingDays(): BriefingSlot[] {
   return slots;
 }
 
-function briefingSlotsForDate(dateValue: string): BriefingSlot[] {
-  if (!dateValue) return nextFourBriefingDays();
+function briefingSlotForDateTime(dateTimeValue: string): BriefingSlot[] {
+  if (!dateTimeValue) {
+    return nextFourBriefingDays();
+  }
 
-  const selectedDate = new Date(`${dateValue}T12:00:00+01:00`);
-  const weekdayName = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Africa/Lagos",
-    weekday: "short",
-  }).format(selectedDate);
+  const start = new Date(`${dateTimeValue}:00+01:00`);
 
-  // No briefing slots on weekends.
-  if (weekdayName === "Sat" || weekdayName === "Sun") {
+  if (Number.isNaN(start.getTime())) {
     return [];
   }
 
-  return createBriefingSlotsForDate(dateValue).filter(
-    (slot) => slot.start.getTime() > Date.now(),
-  );
+  if (start.getTime() <= Date.now()) {
+    return [];
+  }
+
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Lagos",
+    weekday: "short",
+  }).format(start);
+
+  if (weekday === "Sat" || weekday === "Sun") {
+    return [];
+  }
+
+  const end = new Date(start.getTime() + 15 * 60 * 1000);
+
+  return [
+    {
+      start,
+      end,
+      label:
+        start.toLocaleString("en-NG", {
+          timeZone: "Africa/Lagos",
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }) + " WAT",
+    },
+  ];
 }
 
 function resolvedOrganisation(form: FormState) {
@@ -406,7 +434,7 @@ export default function Home() {
   const briefingSlots =
     stage === "success"
       ? selectedBriefingDate
-        ? briefingSlotsForDate(selectedBriefingDate)
+        ? briefingSlotForDateTime(selectedBriefingDate)
         : nextFourBriefingDays()
       : [];
 
@@ -424,19 +452,19 @@ export default function Home() {
     )
     .sort();
 
-  const todayInputValue = toDateInputValue(new Date());
+  const minimumBriefingDateTime = toDateTimeLocalValue(new Date());
 
   const selectedBriefingDateLabel = selectedBriefingDate
-    ? new Date(`${selectedBriefingDate}T12:00:00+01:00`).toLocaleDateString(
-        "en-NG",
-        {
-          timeZone: "Africa/Lagos",
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        },
-      )
+    ? new Date(`${selectedBriefingDate}:00+01:00`).toLocaleString("en-NG", {
+        timeZone: "Africa/Lagos",
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
     : "";
   const begin = () => {
     setStage("interest");
@@ -1012,14 +1040,28 @@ export default function Home() {
                   marginBottom: 0
                 }}
               >
-                Need another day?
+                Need another day or time?
                 <input
-                  type="date"
-                  min={todayInputValue}
+                  type="datetime-local"
+                  min={minimumBriefingDateTime}
                   value={selectedBriefingDate}
                   onChange={(e) => {
-                    setSelectedBriefingDate(e.target.value);
-                    setSelectedSlot(null);
+                    const value = e.target.value;
+
+                    setSelectedBriefingDate(value);
+
+                    if (!value) {
+                      setSelectedSlot(null);
+                      return;
+                    }
+
+                    const customSlots = briefingSlotForDateTime(value);
+
+                    if (customSlots.length) {
+                      setSelectedSlot(customSlots[0].start.toISOString());
+                    } else {
+                      setSelectedSlot(null);
+                    }
                   }}
                   style={{
                     width: "100%",
@@ -1077,7 +1119,7 @@ export default function Home() {
               <CalendarClock size={17} />
               <span>
                 {selectedBriefingDate
-                  ? `Showing availability for ${selectedBriefingDateLabel}`
+                  ? `Custom briefing time: ${selectedBriefingDateLabel}`
                   : "Showing the next 4 available working days"}
               </span>
             </div>
@@ -1109,8 +1151,8 @@ export default function Home() {
               </div>
             ) : (
               <div className="choose-prompt">
-                No briefing times are available on this date. Please select
-                another weekday.
+                That custom time is unavailable. Please choose a future
+                weekday and time.
               </div>
             )}
 
