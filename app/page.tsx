@@ -446,11 +446,13 @@ export default function Home() {
   const [hospitalSearch, setHospitalSearch] = useState("");
   const [showHospitals, setShowHospitals] = useState(false);
 
-  const filteredHospitals = hospitals
+  const filteredHospitals = [...hospitals]
     .filter((hospital) =>
-      hospital.toLowerCase().includes(hospitalSearch.toLowerCase()),
+      hospital
+        .toLowerCase()
+        .includes(hospitalSearch.trim().toLowerCase()),
     )
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 
   const minimumBriefingDateTime = toDateTimeLocalValue(new Date());
 
@@ -877,94 +879,142 @@ export default function Home() {
                 />
               </label>
 <label>
-  Hospital
+                Hospital
 
-  <div className="relative">
-    <input
-      type="text"
-      required
-      placeholder="Search hospital..."
-      value={
-        showHospitals
-          ? hospitalSearch
-          : form.organisation === OTHER_HOSPITAL
-            ? "My hospital is not listed"
-            : form.organisation
-      }
-      onFocus={() => {
-        setHospitalSearch("");
-        setShowHospitals(true);
-      }}
-      onChange={(e) => {
-        setHospitalSearch(e.target.value);
-        setShowHospitals(true);
-      }}
-      className="w-full"
-    />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search hospital..."
+                    autoComplete="off"
+                    value={
+                      showHospitals
+                        ? hospitalSearch
+                        : form.organisation === OTHER_HOSPITAL
+                          ? "My hospital is not listed"
+                          : form.organisation
+                    }
+                    onFocus={() => {
+                      setHospitalSearch(
+                        form.organisation === OTHER_HOSPITAL
+                          ? ""
+                          : form.organisation,
+                      );
 
-    {showHospitals && (
-      <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border bg-white shadow-lg">
-        {filteredHospitals.length > 0 ? (
-          filteredHospitals.map((hospital) => (
-            <button
-              key={hospital}
-              type="button"
-              className="block w-full px-3 py-2 text-left hover:bg-gray-100"
-              onClick={() => {
-                setForm({
-                  ...form,
-                  organisation: hospital,
-                  otherOrganisation: "",
-                });
+                      setShowHospitals(true);
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
 
-                setHospitalSearch(hospital);
-                setShowHospitals(false);
-              }}
-            >
-              {hospital}
-            </button>
-          ))
-        ) : (
-          <div className="px-3 py-2 text-sm text-gray-500">
-            No hospitals found
-          </div>
-        )}
+                      setHospitalSearch(value);
+                      setShowHospitals(true);
 
-        <button
-          type="button"
-          className="block w-full border-t px-3 py-2 text-left font-medium hover:bg-gray-100"
-          onClick={() => {
-            setForm({
-              ...form,
-              organisation: OTHER_HOSPITAL,
-            });
+                      setForm((prev) => ({
+                        ...prev,
+                        organisation: "",
+                        otherOrganisation: "",
+                      }));
+                    }}
+                    onBlur={() => {
+                      window.setTimeout(() => {
+                        setShowHospitals(false);
+                      }, 200);
+                    }}
+                    className="w-full"
+                  />
 
-            setHospitalSearch("");
-            setShowHospitals(false);
-          }}
-        >
-          My hospital is not listed
-        </button>
-      </div>
-    )}
+                  <input
+                    type="text"
+                    required
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    value={
+                      form.organisation === OTHER_HOSPITAL
+                        ? form.otherOrganisation
+                        : form.organisation
+                    }
+                    onChange={() => {}}
+                    style={{
+                      position: "absolute",
+                      opacity: 0,
+                      pointerEvents: "none",
+                      width: "1px",
+                      height: "1px",
+                    }}
+                  />
 
-    {form.organisation === OTHER_HOSPITAL && (
-      <input
-        type="text"
-        required
-        placeholder="Enter hospital name"
-        className="mt-2 w-full"
-        value={form.otherOrganisation}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            otherOrganisation: e.target.value,
-          })
-        }
-      />
-    )}
-  </div>
-</label>
+                  {showHospitals && (
+                    <div
+                      className="absolute left-0 right-0 z-[9999] mt-1 max-h-60 overflow-y-auto overscroll-contain rounded-md border bg-white shadow-lg"
+                      style={{
+                        WebkitOverflowScrolling: "touch",
+                      }}
+                    >
+                      {filteredHospitals.length > 0 ? (
+                        filteredHospitals.map((hospital) => (
+                          <button
+                            key={hospital}
+                            type="button"
+                            className="block w-full cursor-pointer px-3 py-3 text-left text-sm text-black hover:bg-gray-100 active:bg-gray-200"
+                            onPointerDown={(e) => {
+                              e.preventDefault();
+
+                              setForm((prev) => ({
+                                ...prev,
+                                organisation: hospital,
+                                otherOrganisation: "",
+                              }));
+
+                              setHospitalSearch(hospital);
+                              setShowHospitals(false);
+                            }}
+                          >
+                            {hospital}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-3 text-sm text-gray-500">
+                          No hospitals found
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className="block w-full cursor-pointer border-t px-3 py-3 text-left text-sm font-medium text-black hover:bg-gray-100 active:bg-gray-200"
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+
+                          setForm((prev) => ({
+                            ...prev,
+                            organisation: OTHER_HOSPITAL,
+                            otherOrganisation: "",
+                          }));
+
+                          setHospitalSearch("");
+                          setShowHospitals(false);
+                        }}
+                      >
+                        My hospital is not listed
+                      </button>
+                    </div>
+                  )}
+
+                  {form.organisation === OTHER_HOSPITAL && (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter hospital name"
+                      className="mt-2 w-full"
+                      value={form.otherOrganisation}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          otherOrganisation: e.target.value,
+                        }))
+                      }
+                    />
+                  )}
+                </div>
+              </label>
               <div className="form-grid">
                 <label>
                   Official email
