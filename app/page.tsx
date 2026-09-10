@@ -315,24 +315,19 @@ function createBriefingSlotsForDate(dateValue: string): BriefingSlot[] {
 function nextFourBriefingDays(): BriefingSlot[] {
   const slots: BriefingSlot[] = [];
   const cursor = new Date();
+
+  // Start from tomorrow
   cursor.setDate(cursor.getDate() + 1);
 
-  let workingDays = 0;
+  let days = 0;
 
-  while (workingDays < 4) {
+  while (days < 4) {
     const dateValue = toDateInputValue(cursor);
-    const dateAtNoon = new Date(`${dateValue}T12:00:00+01:00`);
 
-    const weekday = new Intl.DateTimeFormat("en-US", {
-      timeZone: "Africa/Lagos",
-      weekday: "short",
-    }).format(dateAtNoon);
+    // Include ALL days — weekdays + weekends
+    slots.push(...createBriefingSlotsForDate(dateValue));
 
-    if (weekday !== "Sat" && weekday !== "Sun") {
-      slots.push(...createBriefingSlotsForDate(dateValue));
-      workingDays++;
-    }
-
+    days++;
     cursor.setDate(cursor.getDate() + 1);
   }
 
@@ -350,16 +345,8 @@ function briefingSlotForDateTime(dateTimeValue: string): BriefingSlot[] {
     return [];
   }
 
+  // Only reject past times
   if (start.getTime() <= Date.now()) {
-    return [];
-  }
-
-  const weekday = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Africa/Lagos",
-    weekday: "short",
-  }).format(start);
-
-  if (weekday === "Sat" || weekday === "Sun") {
     return [];
   }
 
@@ -1170,7 +1157,7 @@ export default function Home() {
               <span>
                 {selectedBriefingDate
                   ? `Custom briefing time: ${selectedBriefingDateLabel}`
-                  : "Showing the next 4 available working days"}
+                  : "Showing the next 4 available days"}
               </span>
             </div>
 
@@ -1201,8 +1188,8 @@ export default function Home() {
               </div>
             ) : (
               <div className="choose-prompt">
-                That custom time is unavailable. Please choose a future
-                weekday and time.
+               That custom time is unavailable. Please choose a future
+               date and time.
               </div>
             )}
 
